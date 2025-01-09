@@ -8,8 +8,10 @@ function toKtDouble(number) {
 
 // Função para transformar o material em um material válido para spigot 1.8.8
 function toValidMaterial(string) {
-  return string.toUpperCase()
-  .replace(/HARDENED_CLAY/g, 'STAINED_CLAY');;
+  return string
+    .toUpperCase()
+    .replace(/HARDENED_CLAY/g, 'STAINED_CLAY')
+    .replace(/STONE_SLAB/g, 'STEP');
 }
 
 // Função para verificar e processar o arquivo de entrada
@@ -53,16 +55,17 @@ function processCommands(jsonData) {
 
   jsonData.forEach(({ Command }) => {
     if (Command.startsWith('setblock')) {
-      const match = Command
-      .match(/setblock ~([-\d.]+) ~([-\d.]+) ~([-\d.]+) ([a-zA-Z_]+)(?: ([-\d.]+))?/);
+      const match = Command.match(
+        /setblock ~([-\d.]+) ~([-\d.]+) ~([-\d.]+) ([a-zA-Z_]+)(?: ([-\d.]+))?/
+      );
 
       if (match) {
         const [, x, y, z, material, damage] = match;
 
         results.push(
-          `setBlock(ItemStack(Material.${toValidMaterial(material)}, 1, ${damage || 0}), ${toKtDouble(
-            x
-          )}, ${toKtDouble(y)}, ${toKtDouble(z)});`
+          `setBlock(ItemStack(Material.${toValidMaterial(material)}, 1, ${
+            damage || 0
+          }), ${toKtDouble(x)}, ${toKtDouble(y)}, ${toKtDouble(z)});`
         );
       } else {
         console.error('Comando setblock inválido:', Command);
