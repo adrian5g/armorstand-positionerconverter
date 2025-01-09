@@ -6,6 +6,12 @@ function toKtDouble(number) {
   return parseFloat(number).toFixed(1);
 }
 
+// Função para transformar o material em um material válido para spigot 1.8.8
+function toValidMaterial(string) {
+  return string.toUpperCase()
+  .replace(/HARDENED_CLAY/g, 'STAINED_CLAY');;
+}
+
 // Função para verificar e processar o arquivo de entrada
 function processFile(inputFilePath, outputFilePath, callback) {
   if (!fs.existsSync(inputFilePath)) {
@@ -47,11 +53,16 @@ function processCommands(jsonData) {
 
   jsonData.forEach(({ Command }) => {
     if (Command.startsWith('setblock')) {
-      const match = Command.match(/setblock ~([-\d.]+) ~([-\d.]+) ~([-\d.]+) ([a-zA-Z_]+)/);
+      const match = Command
+      .match(/setblock ~([-\d.]+) ~([-\d.]+) ~([-\d.]+) ([a-zA-Z_]+)(?: ([-\d.]+))?/);
+
       if (match) {
-        const [, x, y, z, material] = match;
+        const [, x, y, z, material, damage] = match;
+
         results.push(
-          `setBlock(Material.${material.toUpperCase()}, ${toKtDouble(x)}, ${toKtDouble(y)}, ${toKtDouble(z)});`
+          `setBlock(ItemStack(Material.${toValidMaterial(material)}, 1, ${damage || 0}), ${toKtDouble(
+            x
+          )}, ${toKtDouble(y)}, ${toKtDouble(z)});`
         );
       } else {
         console.error('Comando setblock inválido:', Command);
@@ -63,12 +74,15 @@ function processCommands(jsonData) {
 
         const small = /Small:1/.test(attributes) ? 'true' : 'false';
         const armorMatch = attributes.match(/ArmorItems:\[.*\{.*id:(.+?)\}\]/);
-        const headItem = armorMatch ? armorMatch[1].toUpperCase().replace('DAMAGE:', ', 1') : 'AIR';
+        const headItem = (armorMatch ? armorMatch[1] : 'AIR').match(/^(.+?)(?:,Damage:(\d+))?$/);
+
+        const headItemMaterial = toValidMaterial(headItem[1]);
+        const headItemDamage = headItem[2] || 0;
 
         results.push(
           `summonArmorStand(${toKtDouble(x)}, ${toKtDouble(y)}, ${toKtDouble(
             z
-          )}, head = ItemStack(Material.${headItem}), small = ${small});`
+          )}, head = ItemStack(Material.${headItemMaterial}, 1, ${headItemDamage}), small = ${small});`
         );
       } else {
         console.error('Comando summon armor_stand inválido:', Command);

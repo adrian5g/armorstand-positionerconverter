@@ -1,7 +1,8 @@
 val center = player.location.block.location
 
-fun setBlock(material: Material, x: Double, y: Double, z: Double) {
-  center.clone().add(x, y, z).block.type = material
+fun setBlock(item: ItemStack, x: Double, y: Double, z: Double) {
+  center.clone().add(x, y, z).block.type = item.type
+  center.clone().add(x, y, z).block.data = item.data.data
 }
 
 fun summonArmorStand(x: Double, y: Double, z: Double, head: ItemStack, small: Boolean) {
